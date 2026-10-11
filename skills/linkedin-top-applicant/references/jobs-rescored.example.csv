@@ -1,0 +1,2 @@
+new_rank,new_score,old_score,job_id,title,company,easy_apply,url,what_the_description_requires,gap_vs_your_profile,score_before_skills_check,skills_note
+1,9,8,0000000001,Data Lead,ExampleCo,Yes,https://www.linkedin.com/jobs/view/0000000001/,5+ yrs data eng; strong SQL; dbt; BI,Hands-on IC more than manager,8,dbt now met
