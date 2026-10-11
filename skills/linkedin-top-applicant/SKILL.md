@@ -5,6 +5,8 @@ description: Find LinkedIn jobs where the user would be a top applicant, rescore
 
 # LinkedIn Top Applicant
 
+All `scripts/`, `templates/` and `references/` paths below are relative to this skill's base directory (the folder holding this file), not the current working directory.
+
 Turn the user's logged-in LinkedIn session into a ranked shortlist and a folder of tailored CVs. Three phases, each with a fixed output contract, so a run can stop after any phase and resume later.
 
 ## Inputs to settle first
@@ -29,7 +31,8 @@ Ask once, then reuse. Do not start browsing until these are known.
 
 ## Browser setup
 
-1. Load the Chrome tools in one batched ToolSearch call: `mcp__claude-in-chrome__tabs_context_mcp`, `navigate`, `computer`, `read_page`, `get_page_text`, `find`, `tabs_create_mcp`, `tabs_close_mcp`, `list_connected_browsers`, `switch_browser`.
+1. Load the Chrome tools in one batched ToolSearch call:
+   `select:mcp__claude-in-chrome__tabs_context_mcp,mcp__claude-in-chrome__tabs_create_mcp,mcp__claude-in-chrome__tabs_close_mcp,mcp__claude-in-chrome__navigate,mcp__claude-in-chrome__computer,mcp__claude-in-chrome__read_page,mcp__claude-in-chrome__get_page_text,mcp__claude-in-chrome__find,mcp__claude-in-chrome__list_connected_browsers,mcp__claude-in-chrome__switch_browser`
 2. Call `tabs_context_mcp` first, then `list_connected_browsers`. If the user wants Brave (or another browser) and it is not the active one, `switch_browser`.
 3. Open a new tab for the work. Never reuse tab ids from an earlier session.
 4. If LinkedIn shows a login wall or a checkpoint, stop and ask the user to sign in. Do not enter credentials.
@@ -88,15 +91,16 @@ Goal: one A4 page per selected job.
    - Keep every experience entry and date from the base CV. Reorder and reword bullets so the ones this job cares about come first; drop the least relevant ones to fit one page.
    - Use the job's own vocabulary only where the user's experience genuinely matches it.
    - Skills section: put the job's required tools first, only if they are in the base CV or confirmed skills.
-3. Save the HTML as `<OutDir>/html/<NN>-<Company>-<Role>.html`. The `<title>` must be `<Name> | <NN>-<Company>-<Role>`.
-4. Render:
+3. Build the slug `<Company>-<Role>`: ASCII letters, digits and hyphens only; words joined by hyphens; `&` becomes `and`; parentheticals, commas, slashes and other punctuation are dropped. Examples: `04-april-Hands-on-AI-and-Data-Engineering-Manager`, `08-Alice-Data-Science-Engineering-Manager`. `<NN>` is the two-digit rank. `<Name>` is `First_Last`.
+4. Save the HTML as `<OutDir>/html/<NN>-<slug>.html`. The `<title>` must be `<Full Name> | <NN>-<slug>`.
+5. Render:
 
 ```bash
-scripts/render-cv.sh <html> <OutDir>/cvs/<Name>_CV_<NN>-<Company>-<Role>.pdf
+<skill-dir>/scripts/render-cv.sh <html> <OutDir>/cvs/<Name>_CV_<NN>-<slug>.pdf
 ```
 
-The script requires A4 and at most 1 page. If it exits with code 2 (too long), trim bullets and re-render; do not shrink the font below 9pt.
-5. Before reporting, re-read each PDF's text (`pdftotext`) and check that nothing in it is absent from the base CV or confirmed skills.
+The script requires A4 and at most 1 page, blocks script and external loads in the HTML, and deletes any earlier PDF at the output path before rendering. If it exits with code 2 (too long), trim bullets and re-render; do not shrink the font below 9pt. The template fits the full base CV to within a few lines, so one or two dropped bullets normally gets it to one page.
+6. Before reporting, re-read each PDF's text (`pdftotext`) and check that nothing in it is absent from the base CV or confirmed skills.
 
 ## Final report
 
