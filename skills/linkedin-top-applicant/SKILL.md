@@ -99,7 +99,7 @@ Goal: one A4 page per selected job.
 <skill-dir>/scripts/render-cv.sh <html> <OutDir>/cvs/<Name>_CV_<NN>-<slug>.pdf
 ```
 
-The script requires A4 and at most 1 page, blocks script and external loads in the HTML, and deletes any earlier PDF at the output path before rendering. If it exits with code 2 (too long), trim bullets and re-render; do not shrink the font below 9pt. The template fits the full base CV to within a few lines, so one or two dropped bullets normally gets it to one page.
+The script re-serializes the HTML through an allowlist sanitizer and renders only that output (with a CSP), requires A4 and at most 1 page, and deletes any earlier PDF at the output path first. If it exits with code 2 (too long), trim bullets and re-render; do not shrink the font below 9pt. The template fits the full base CV to within a few lines, so one or two dropped bullets normally gets it to one page.
 6. Before reporting, re-read each PDF's text (`pdftotext`) and check that nothing in it is absent from the base CV or confirmed skills.
 
 ## Final report

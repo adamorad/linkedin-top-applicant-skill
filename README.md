@@ -20,6 +20,7 @@ It then reports back with a table of ranks, scores, Easy Apply flags and the mai
 |------|---------|
 | `skills/linkedin-top-applicant/SKILL.md` | Inputs, hard rules, browser setup, the three phases, scoring rubric, final report |
 | `skills/linkedin-top-applicant/scripts/render-cv.sh` | HTML to one-page A4 PDF with headless Chrome; fails on wrong size or too many pages |
+| `skills/linkedin-top-applicant/scripts/lint-cv-html.py` | Allowlist sanitizer: re-serializes CV HTML so the browser never loads raw input |
 | `skills/linkedin-top-applicant/templates/cv.html` | One-page A4 CV template with print CSS |
 | `skills/linkedin-top-applicant/references/profile.example.md` | Shape of the profile file (identity, preferences, confirmed skills, hard gaps) |
 | `skills/linkedin-top-applicant/references/jobs.example.csv` | Phase 1 CSV contract |

@@ -28,26 +28,18 @@ OUT="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 PROFILE_DIR="$(mktemp -d)"
 trap 'rm -rf "$PROFILE_DIR"' EXIT
 
-# Allowlist lint (tags, attributes, no stray markup). CV text may derive from
-# untrusted job descriptions, so denylisting is not enough.
-LINT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lint-cv-html.py"
-python3 -I "$LINT" "$IN" || { echo "ERROR: $IN failed HTML allowlist lint; escape text and remove disallowed markup" >&2; exit 3; }
-
-# Render a copy under a fixed safe name so '#', '?', '%' or spaces in the
-# original path cannot break the file:// URL. No other local files are loaded.
-# A CSP meta is prepended so script, network and local-file loads are blocked:
-# the HTML may contain text derived from untrusted job descriptions.
-IN_ABS="$PROFILE_DIR/cv.html"
-CSP="<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'\">"
-if grep -qi '<head>' "$IN"; then
-  # keep the doctype first so the page stays out of quirks mode
-  awk -v csp="$CSP" '!d && tolower($0) ~ /<head>/ { sub(/<[Hh][Ee][Aa][Dd]>/, "&" csp); d=1 } { print }' "$IN" > "$IN_ABS"
-else
-  { printf '%s\n' "$CSP"; cat "$IN"; } > "$IN_ABS"
-fi
-
-# Never trust a stale file from an earlier render.
+# Never trust a stale file from an earlier render (also on lint failure).
 rm -f "$OUT"
+
+# Sanitize: parse with an allowlist and write a canonical re-serialization
+# (CSP first in <head>). The browser only ever loads that output, never the
+# input bytes. CV text may derive from untrusted job descriptions.
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+IN_ABS="$PROFILE_DIR/cv.html"
+python3 -I "$HERE/lint-cv-html.py" "$IN" "$IN_ABS" || {
+  echo "ERROR: $IN failed the HTML allowlist; escape text and remove disallowed markup" >&2
+  exit 3
+}
 
 # Run under a watchdog and judge success by the PDF, not the exit code.
 "$BROWSER" --headless=new --disable-gpu \
