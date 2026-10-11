@@ -28,4 +28,20 @@ if "$R" "$HERE/fixtures/refresh.html" "$OUT/r.pdf" 2>/dev/null; then
   echo "FAIL: meta refresh accepted"; exit 1
 fi
 [ ! -e "$OUT/r.pdf" ] || { echo "FAIL: PDF created for rejected HTML"; exit 1; }
+# parser-differential payloads must all fail the allowlist lint
+L="$HERE/../skills/linkedin-top-applicant/scripts/lint-cv-html.py"
+while IFS= read -r payload; do
+  printf '<!DOCTYPE html><html><head><meta charset="utf-8"><title>t</title></head><body><p>%s</p></body></html>' "$payload" > "$OUT/p.html"
+  if python3 -I "$L" "$OUT/p.html" 2>/dev/null; then echo "FAIL: lint accepted: $payload"; exit 1; fi
+done <<'PAYLOADS'
+<ScRiPt>alert(1)</ScRiPt>
+<img src=x onerror=alert(1)>
+<svg/onload=alert(1)>
+<a href="file:///etc/passwd">x</a>
+<p onclick="x">hi</p>
+<![CDATA[<script>x</script>]]>
+<!--[if IE]><script>x</script><![endif]-->
+<iframe src=file:///etc/passwd></iframe>
+a < b
+PAYLOADS
 echo "PASS"

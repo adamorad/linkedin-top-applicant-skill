@@ -28,12 +28,10 @@ OUT="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 PROFILE_DIR="$(mktemp -d)"
 trap 'rm -rf "$PROFILE_DIR"' EXIT
 
-# Reject active or navigating HTML outright. CV text may derive from untrusted
-# job descriptions; a CV needs none of these elements or attributes.
-if grep -qiE '<(script|iframe|frame|object|embed|link|base|form|svg|meta[^>]+(refresh|http-equiv))|[[:space:]]on[a-z]+[[:space:]]*=|javascript:|(src|href)[[:space:]]*=[[:space:]]*["'"'"']?(file:|https?:|//)' "$IN"; then
-  echo "ERROR: $IN contains active or external HTML (script/iframe/link/meta refresh/on*=/external src); escape text and remove it" >&2
-  exit 3
-fi
+# Allowlist lint (tags, attributes, no stray markup). CV text may derive from
+# untrusted job descriptions, so denylisting is not enough.
+LINT="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/lint-cv-html.py"
+python3 -I "$LINT" "$IN" || { echo "ERROR: $IN failed HTML allowlist lint; escape text and remove disallowed markup" >&2; exit 3; }
 
 # Render a copy under a fixed safe name so '#', '?', '%' or spaces in the
 # original path cannot break the file:// URL. No other local files are loaded.
