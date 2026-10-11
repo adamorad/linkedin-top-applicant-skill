@@ -28,12 +28,19 @@ OUT="$(cd "$(dirname "$OUT")" && pwd)/$(basename "$OUT")"
 PROFILE_DIR="$(mktemp -d)"
 trap 'rm -rf "$PROFILE_DIR"' EXIT
 
+# Reject active or navigating HTML outright. CV text may derive from untrusted
+# job descriptions; a CV needs none of these elements or attributes.
+if grep -qiE '<(script|iframe|frame|object|embed|link|base|form|svg|meta[^>]+(refresh|http-equiv))|[[:space:]]on[a-z]+[[:space:]]*=|javascript:|(src|href)[[:space:]]*=[[:space:]]*["'"'"']?(file:|https?:|//)' "$IN"; then
+  echo "ERROR: $IN contains active or external HTML (script/iframe/link/meta refresh/on*=/external src); escape text and remove it" >&2
+  exit 3
+fi
+
 # Render a copy under a fixed safe name so '#', '?', '%' or spaces in the
 # original path cannot break the file:// URL. No other local files are loaded.
 # A CSP meta is prepended so script, network and local-file loads are blocked:
 # the HTML may contain text derived from untrusted job descriptions.
 IN_ABS="$PROFILE_DIR/cv.html"
-CSP="<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:\">"
+CSP="<meta http-equiv=\"Content-Security-Policy\" content=\"default-src 'none'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'\">"
 if grep -qi '<head>' "$IN"; then
   # keep the doctype first so the page stays out of quirks mode
   awk -v csp="$CSP" '!d && tolower($0) ~ /<head>/ { sub(/<[Hh][Ee][Aa][Dd]>/, "&" csp); d=1 } { print }' "$IN" > "$IN_ABS"

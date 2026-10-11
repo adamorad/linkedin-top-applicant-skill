@@ -86,7 +86,7 @@ Penalize years requirements the user does not meet. Mention the gap honestly in 
 Goal: one A4 page per selected job.
 
 1. Select jobs with `new_score >= threshold`, up to Max CVs, in rank order. Show the list and let the user trim it.
-2. For each job, fill `templates/cv.html` from the base CV plus confirmed skills:
+2. For each job, fill `templates/cv.html` from the base CV plus confirmed skills. HTML-escape every inserted string (`&`, `<`, `>`, quotes) and never copy raw markup from a job description into the file; the renderer rejects script, iframe, link, meta refresh, event handlers and external src or href with exit code 3:
    - Headline and profile paragraph aim at this job's title and top 2 to 3 requirements.
    - Keep every experience entry and date from the base CV. Reorder and reword bullets so the ones this job cares about come first; drop the least relevant ones to fit one page.
    - Use the job's own vocabulary only where the user's experience genuinely matches it.
